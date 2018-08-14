@@ -273,6 +273,14 @@ _apb_sso_client_secret: &_apb_sso_client_secret
   type: string
   display_type: password
   display_group: Red Hat - Single Sign-On (Optional)
+_apb_sso_principal_attribute: &_apb_sso_principal_attribute
+  name: apb_sso_principal_attribute
+  title: RH-SSO Principal Attribute
+  description: Red Hat Single Sign-On Principal Attribute to use. Affects task assignment and user display in the UI.
+  required: false
+  type: string
+  default: preferred_username
+  display_group: Red Hat - Single Sign-On (Optional)
 _apb_sso_user: &_apb_sso_user
   name: apb_sso_user
   title: RH-SSO Admin User
@@ -431,6 +439,7 @@ plans:
         name: apb_kieserver_sso_client_secret
         title: RH-SSO Process Server - Client Secret
         description: Red Hat Single Sign-On Client secret for Process Server.
+      - *_apb_sso_principal_attribute
       - *_apb_sso_user
       - *_apb_sso_pwd
       - *_apb_sso_disable_ssl_cert_validation
@@ -566,6 +575,7 @@ plans:
         name: apb_kieserver_sso_client_secret
         title: RH-SSO Process Server - Client Secret
         description: Red Hat Single Sign-On Client secret for Process Server.
+      - *_apb_sso_principal_attribute
       - *_apb_sso_user
       - *_apb_sso_pwd
       - *_apb_sso_disable_ssl_cert_validation
@@ -645,6 +655,7 @@ plans:
         name: apb_sso_businesscentral_client_secret
         title: RH-SSO Business Central Monitoring - Client Secret
         description: Red Hat Single Sign-On Client secret for Business Central Monitoring.
+      - *_apb_sso_principal_attribute
       - *_apb_sso_user
       - *_apb_sso_pwd
       - *_apb_sso_disable_ssl_cert_validation
@@ -780,6 +791,7 @@ plans:
         name: apb_kieserver_sso_client_secret
         title: RH-SSO Process Server - Client Secret
         description: Red Hat Single Sign-On Client secret for Process Server.
+      - *_apb_sso_principal_attribute
       - *_apb_sso_user
       - *_apb_sso_pwd
       - *_apb_sso_disable_ssl_cert_validation
