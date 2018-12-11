@@ -1,6 +1,6 @@
 schema_version: 1
 
-name: "rhpam-7/rhpam72-apb"
+name: "rhpam-7/rhpam7-apb"
 description: "Red Hat Business Central 7.2 OpenShift Ansible Playbook Bundle"
 version: "1.0"
 from: "openshift3/apb-base:v3.11"
@@ -28,5 +28,5 @@ packages:
     - java-1.8.0-openjdk-headless
 osbs:
   repository:
-    name: apbs/rhpam
-    branch: rhpam-7.2-rhel-7
+    name: apbs/rhpam-7-apb-openshift
+    branch: rhpam-7-rhel-7
