@@ -21,7 +21,7 @@ _apb_image_stream_tag: &_apb_image_stream_tag
   description: Tag version of the ImageStream to use. It must exist in the openshift namespace.
   required: true
   type: string
-  default: '1.1'
+  default: '1.0'
 # HA
 _apb_replicas: &_apb_replicas
   title: Number of replicas
@@ -273,37 +273,71 @@ _apb_controller_pwd: &_apb_controller_pwd
   required: false
   type: string
   display_type: password
+# Auth type
+_apb_auth_type: &_apb_auth_type
+  name: apb_auth_type
+  title: Athentication provider
+  description: Provider to use for authentication and authorization
+  required: true
+  type: enum
+  enum: [ 'Properties', 'SSO', 'LDAP' ]
+  default: Properties
+  display_group: Authentication
+_apb_auth_use_rolemapper: &_apb_auth_use_rolemapper
+  name: apb_auth_use_rolemapper
+  title: Map roles
+  description: Provide a properties file defining the roles to map
+  type: boolean
+  dependencies:
+    - key: "apb_auth_type"
+      value: ["SSO", "LDAP"]
+  display_group: Authentication
 # RH-SSO
 _apb_sso_url: &_apb_sso_url
   name: apb_sso_url
   title: RH-SSO URL
   description: Red Hat Single Sign-On (SSO) URL. Leave empty to avoid using SSO. For example, https://rhsso.example.com/auth
-  required: false
+  required: true
   type: string
-  display_group: Red Hat - Single Sign-On (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 _apb_sso_realm: &_apb_sso_realm
   name: apb_sso_realm
   title: RH-SSO Realm
   description: Red Hat Single Sign-On Realm name. For example, rhpam
   required: false
   type: string
-  display_group: Red Hat - Single Sign-On (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 _apb_sso_client: &_apb_sso_client
   required: false
   type: string
-  display_group: Red Hat - Single Sign-On (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 _apb_sso_client_secret: &_apb_sso_client_secret
   required: false
   type: string
   display_type: password
-  display_group: Red Hat - Single Sign-On (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 _apb_sso_user: &_apb_sso_user
   name: apb_sso_user
   title: RH-SSO Admin User
   description: Red Hat Single Sign-On User to be used to create the Client if it doesn't exist. The user must be able to create secrets on the given realm.
   required: false
   type: string
-  display_group: Red Hat - Single Sign-On (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 _apb_sso_pwd: &_apb_sso_pwd
   name: apb_sso_pwd
   title: RH-SSO Admin Password
@@ -311,36 +345,52 @@ _apb_sso_pwd: &_apb_sso_pwd
   required: false
   type: string
   display_type: password
-  display_group: Red Hat - Single Sign-On (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 _apb_sso_disable_ssl_cert_validation: &_apb_sso_disable_ssl_cert_validation
   name: apb_sso_disable_ssl_cert_validation
   title: RH-SSO Disable SSL Validation
   description: Disable SSL Certificate Validation when connecting to RH-SSO
   required: false
   type: boolean
-  display_group: Red Hat - Single Sign-On (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 _apb_sso_principal_attribute: &_apb_sso_principal_attribute
   name: apb_sso_principal_attribute
   title: RH-SSO Principal Attribute
   description: Principal attribute to use as username
   required: false
   type: string
-  display_group: Red Hat - Single Sign-On (Optional)
+  default: preferred_username
+  dependencies:
+    - key: "apb_auth_type"
+      value: "SSO"
+  display_group: Authentication
 # LDAP Auth
 _apb_auth_ldap_url: &_apb_auth_ldap_url
   name: apb_auth_ldap_url
   title: LDAP Endpoint
   description: LDAP Endpoint to connect for authentication. e.g. "ldap://myldap.example.com"
-  required: false
+  required: true
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_bind_dn: &_apb_auth_ldap_bind_dn
   name: apb_auth_ldap_bind_dn
   title: LDAP Bind DN
   description: Bind DN used for authentication. e.g. "uid=admin,ou=users,ou=exmample,ou=com"
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_bind_credential: &_apb_auth_ldap_bind_credential
   name: apb_auth_ldap_bind_credential
   title: LDAP Bind Credentials
@@ -348,28 +398,40 @@ _apb_auth_ldap_bind_credential: &_apb_auth_ldap_bind_credential
   required: false
   type: string
   display_type: password
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_jaas_security_domain: &_apb_auth_ldap_jaas_security_domain
   name: apb_auth_ldap_jaas_security_domain
   title: LDAP JAAS Security Domain
   description: The JMX ObjectName of the JaasSecurityDomain used to decrypt the password.
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_base_ctx_dn: &_apb_auth_ldap_base_ctx_dn
   name: apb_auth_ldap_base_ctx_dn
   title: LDAP Base DN
   description: LDAP Base DN of the top-level context to begin the user search. e.g. "ou=users,ou=example,ou=com"
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_base_filter: &_apb_auth_ldap_base_filter
   name: apb_auth_ldap_base_filter
   title: LDAP Base Search filter
   description: LDAP search filter used to locate the context of the user to authenticate. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. A common example for the search filter is (uid={0}).
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_search_scope: &_apb_auth_ldap_search_scope
   name: apb_auth_ldap_search_scope
   title: LDAP Search scope
@@ -377,119 +439,166 @@ _apb_auth_ldap_search_scope: &_apb_auth_ldap_search_scope
   required: false
   type: enum
   enum: [ 'SUBTREE_SCOPE', 'OBJECT_SCOPE', 'ONELEVEL_SCOPE' ]
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_search_time_limit: &_apb_auth_ldap_search_time_limit
   name: apb_auth_ldap_search_time_limit
   title: LDAP Search time limit
   description: The timeout in milliseconds for user or role searches. e.g. "10000"
   required: false
   type: number
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_distinguished_name_attribute: &_apb_auth_ldap_distinguished_name_attribute
   name: apb_auth_ldap_distinguished_name_attribute
   title: LDAP DN attribute
   description: The name of the attribute in the user entry that contains the DN of the user. This may be necessary if the DN of the user itself contains special characters, backslash for example, that prevent correct user mapping. If the attribute does not exist, the entry’s DN is used.
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_parse_username: &_apb_auth_ldap_parse_username
   name: apb_auth_ldap_parse_username
   title: LDAP Parse username
   description: A flag indicating if the DN is to be parsed for the username. If set to true, the DN is parsed for the username. If set to false the DN is not parsed for the username. This option is used together with usernameBeginString and usernameEndString.
   required: false
   type: boolean
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_username_begin_string: &_apb_auth_ldap_username_begin_string
   name: apb_auth_ldap_username_begin_string
   title: LDAP Username begin string
   description: Defines the String which is to be removed from the start of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true.
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_username_end_string: &_apb_auth_ldap_username_end_string
   name: apb_auth_ldap_username_end_string
   title: LDAP Username end string
   description: Defines the String which is to be removed from the end of the DN to reveal the username. This option is used together with usernameEndString and only taken into account if parseUsername is set to true.
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_role_attribute_id: &_apb_auth_ldap_role_attribute_id
   name: apb_auth_ldap_role_attribute_id
   title: LDAP Role attributeID
   description: Name of the attribute containing the user roles. e.g. "memberOf"
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_roles_ctx_dn: &_apb_auth_ldap_roles_ctx_dn
   name: apb_auth_ldap_roles_ctx_dn
   title: LDAP Roles Search DN
   description: The fixed DN of the context to search for user roles. This is not the DN where the actual roles are, but the DN where the objects containing the user roles are. For example, in a Microsoft Active Directory server, this is the DN where the user account is.
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_role_filter: &_apb_auth_ldap_role_filter
   name: apb_auth_ldap_role_filter
   title: LDAP Role search filter
   description: A search filter used to locate the roles associated with the authenticated user. The input username or userDN obtained from the login module callback is substituted into the filter anywhere a {0} expression is used. The authenticated userDN is substituted into the filter anywhere a {1} is used. An example search filter that matches on the input username is (member={0}). An alternative that matches on the authenticated userDN is (member={1}).
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_role_recursion: &_apb_auth_ldap_role_recursion
   name: apb_auth_ldap_role_recursion
   title: LDAP Role recursion
   description: The number of levels of recursion the role search will go below a matching context. Disable recursion by setting this to 0.
   required: false
   type: number
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_default_role: &_apb_auth_ldap_default_role
   name: apb_auth_ldap_default_role
   title: LDAP Default role
   description: A role included for all authenticated users
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_role_name_attribute_id: &_apb_auth_ldap_role_name_attribute_id
   name: apb_auth_ldap_role_name_attribute_id
   title: LDAP Role name attribute ID
   description: Name of the attribute within the roleCtxDN context which contains the role name. If the roleAttributeIsDN property is set to true, this property is used to find the role object’s name attribute.
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_parse_role_name_from_dn: &_apb_auth_ldap_parse_role_name_from_dn
   name: apb_auth_ldap_parse_role_name_from_dn
   title: LDAP Role DN contains roleNameAttributeID
   description: A flag indicating if the DN returned by a query contains the roleNameAttributeID. If set to true, the DN is checked for the roleNameAttributeID. If set to false, the DN is not checked for the roleNameAttributeID. This flag can improve the performance of LDAP queries.
   required: false
   type: boolean
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_ldap_role_attribute_is_dn: &_apb_auth_ldap_role_attribute_is_dn
   name: apb_auth_ldap_role_attribute_is_dn
   title: LDAP Role Attribute ID is DN
   description: Whether or not the roleAttributeID contains the fully-qualified DN of a role object. If false, the role name is taken from the value of the roleNameAttributeId attribute of the context name. Certain directory schemas, such as Microsoft Active Directory, require this attribute to be set to true.
   required: false
   type: boolean
-  display_group: LDAP (Optional)
+
+  display_group: Authentication
 _apb_auth_ldap_referral_user_attribute_id_to_check: &_apb_auth_ldap_referral_user_attribute_id_to_check
   name: apb_auth_ldap_referral_user_attribute_id_to_check
   title: LDAP Referral user attribute ID
   description: If you are not using referrals, this option can be ignored. When using referrals, this option denotes the attribute name which contains users defined for a certain role, for example member, if the role object is inside the referral. Users are checked against the content of this attribute name. If this option is not set, the check will always fail, so role objects cannot be stored in a referral tree.
   required: false
   type: string
-  display_group: LDAP (Optional)
+  dependencies:
+    - key: "apb_auth_type"
+      value: "LDAP"
+  display_group: Authentication
 _apb_auth_role_mapper_roles_properties: &_apb_auth_role_mapper_roles_properties
   name: apb_auth_role_mapper_roles_properties
   title: RoleMapping rolesProperties file path
   description: When present, the RoleMapping Login Module will be configured to use the provided file. This property defines the fully-qualified file path and name of a properties file or resource which maps roles to replacement roles. The format is original_role=role1,role2,role3
-  required: false
+  required: true
   type: string
-  display_group: RoleMapping (Optional)
+  dependencies:
+    - key: "apb_auth_use_rolemapper"
+  display_group: Authentication
 _apb_auth_role_mapper_replace_role: &_apb_auth_role_mapper_replace_role
   name: apb_auth_role_mapper_replace_role
   title: RoleMapping replaceRole property
   description: Whether to add to the current roles, or replace the current roles with the mapped ones. Replaces if set to true.
   required: false
   type: boolean
-  display_group: RoleMapping (Optional)
+  dependencies:
+    - key: "apb_auth_use_rolemapper"
+  display_group: Authentication
 
 version: 1.0
 name: rhpam-apb
@@ -618,6 +727,10 @@ plans:
       - *_apb_maven_repo_url
       - *_apb_maven_repo_user
       - *_apb_maven_repo_pwd
+
+      # Auth
+      - *_apb_auth_type
+      - *_apb_auth_use_rolemapper
 
       # RH - SSO
       - *_apb_sso_url
@@ -791,6 +904,10 @@ plans:
       - <<: *_apb_controller_pwd
         display_group: Controller Integration
 
+      # Auth
+      - *_apb_auth_type
+      - *_apb_auth_use_rolemapper
+
       # RH - SSO
       - *_apb_sso_url
       - *_apb_sso_realm
@@ -900,18 +1017,10 @@ plans:
         name: apb_smartrouter_hostname
         description: Public hostname for Smart Router. Generated if empty
         display_group: Smart Router
-      - <<: *_apb_secret_name
-        name: apb_smartrouter_secret_name
-        display_group: Smart Router
-      - <<: *_apb_keystore_name
-        name: apb_smartrouter_keystore_name
-        display_group: Smart Router
-      - <<: *_apb_keystore_alias
-        name: apb_smartrouter_keystore_alias
-        display_group: Smart Router
-      - <<: *_apb_keystore_pwd
-        name: apb_smartrouter_keystore_pwd
-        display_group: Smart Router
+
+      # Auth
+      - *_apb_auth_type
+      - *_apb_auth_use_rolemapper
 
       # RH - SSO
       - *_apb_sso_url
@@ -1025,18 +1134,6 @@ plans:
         name: apb_smartrouter_hostname
         description: Public hostname for Smart Router. Generated if empty
         display_group: Smart Router
-      - <<: *_apb_secret_name
-        name: apb_smartrouter_secret_name
-        display_group: Smart Router
-      - <<: *_apb_keystore_name
-        name: apb_smartrouter_keystore_name
-        display_group: Smart Router
-      - <<: *_apb_keystore_alias
-        name: apb_smartrouter_keystore_alias
-        display_group: Smart Router
-      - <<: *_apb_keystore_pwd
-        name: apb_smartrouter_keystore_pwd
-        display_group: Smart Router
 
       # Process Server
       - name: apb_kieserver_sets
@@ -1081,6 +1178,10 @@ plans:
       - *_apb_kieserver_external_db_port
       - *_apb_kieserver_external_db_name
       - *_apb_kieserver_external_db_url
+
+      # Auth
+      - *_apb_auth_type
+      - *_apb_auth_use_rolemapper
 
       # RH - SSO
       - *_apb_sso_url
